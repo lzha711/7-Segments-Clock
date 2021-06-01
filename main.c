@@ -42,9 +42,9 @@ uint8_t seven_seg_digits[10][7] = {
 };
 
 void WriteDisplays(uint8_t digit, uint8_t displaynum){
-	uint8_t PD_pin = 2; // initialize to PD2 (PD2 refers to 2)
+	uint8_t PD_pin = 1; // initialize to PD1 (PD1 = 1)
 	PORTD &= 0b00000000; //clear port D
-	PORTB &= ~(1<<PB0); // clear PB0
+	PORTC &= ~(1<<PC0); // clear PC0
 	
 	// display select
 	if (displaynum == 0){
@@ -64,13 +64,15 @@ void WriteDisplays(uint8_t digit, uint8_t displaynum){
 	// assign display number
 	for (int segCount = 0; segCount <7; ++segCount){
 		if(PD_pin < 8){
-			PORTD |= (seven_seg_digits[digit][segCount]<<PD_pin); //assign [digit][a-f] to PD2-PD7
+			PORTD |= (seven_seg_digits[digit][segCount]<<PD_pin); //assign [digit][a-f] to PD1-PD7
+			//PORTC |= (seven_seg_digits[digit][6]<<PC0);//assign [digit][g] to PC0
 		}
 		else{
-			PORTB |= (seven_seg_digits[digit][segCount]<<PB0);//assign [digit][g] to PB0
+			// PORTC |= (seven_seg_digits[digit][segCount]<<PC0);//assign [digit][g] to PC0
 		}
 		//the simulation shows that g displays slower than everyone else 
 		++PD_pin;
+		// interesting phenomenon: when using PD1-PD7, the led shows good. when assigning g to another IO, PB0 or PC0, the timing of g becomes wrong
 	}
 }
 
@@ -116,6 +118,7 @@ void CalculateMinutes(void){
 void IO_init(void){
 	DDRD = 0b11111100; //set PD2-PD7 as output
 	DDRB = 0b00111111; //set PB0-PB5 as output
+	DDRC |= (1<<PC0); // set PC0 as output
 }
 
 void TIMER1_init(void){
@@ -123,7 +126,7 @@ void TIMER1_init(void){
 	TCCR1B = 0b00001101; //CTC mode, clk_t0 = clk_io/1024
 	OCR1A = 0x3D08; // trigger interrupt every 1s
 	TIMSK1 = 0b00000010; // set bit OCIE1A, timer/counter1 output compare match A interrupt enable
-	PORTB |= (1<<PB1); //set OC1A as output, doesn't matter intput or output
+	PORTB |= (1<<PB1); //set OC1A as output, doesn't matter input or output
 }
 
 
